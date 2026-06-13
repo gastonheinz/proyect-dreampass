@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 
-export default function useRegisterAnimation(addXp) {
+export default function useRegisterAnimation(addXp, xpMode = 'current', miniXp = 10, blockXp = 50) {
   const [isRegistering, setIsRegistering] = useState(false)
   const [registerXpDisplay, setRegisterXpDisplay] = useState(0)
   const [showXpResult, setShowXpResult] = useState(false)
@@ -17,9 +17,13 @@ export default function useRegisterAnimation(addXp) {
   addXpRef.current = addXp
 
   const startRegister = useCallback((completedMinis, completedBlocks) => {
-    const left = (completedBlocks > 0 ? 1 : 0) + completedMinis * 5
-    const right = (completedMinis > 0 ? 1 : 0) + completedBlocks
-    const total = left * right
+    const left = xpMode === 'classic'
+      ? completedMinis * miniXp
+      : 1 + completedMinis * 5
+    const right = xpMode === 'classic'
+      ? completedBlocks * blockXp
+      : 1 + completedBlocks * 5
+    const total = xpMode === 'classic' ? left + right : left * right
     if (total <= 0) return null
     targetRef.current = total
     leftRef.current = left
@@ -31,7 +35,7 @@ export default function useRegisterAnimation(addXp) {
     setIsRegistering(true)
     setShowXpResult(false)
     return total
-  }, [])
+  }, [xpMode, miniXp, blockXp])
 
   useEffect(() => {
     if (!isRegistering) return

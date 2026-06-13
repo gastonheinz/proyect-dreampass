@@ -20,7 +20,7 @@ export default function App() {
   const game = useGameState()
   const displayedXp = useXpAnimation(game.totalXp)
   const levelUp = useLevelUp(displayedXp, game.rewards)
-  const regAnim = useRegisterAnimation(game.addXp)
+  const regAnim = useRegisterAnimation(game.addXp, game.xpMode, game.miniXp, game.blockXp)
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans p-4 md:p-8">

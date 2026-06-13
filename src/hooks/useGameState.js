@@ -28,6 +28,7 @@ export default function useGameState() {
   const [totalXp, setTotalXp] = useState(() => loadInt('totalXp', 0))
   const [miniXp, setMiniXp] = useState(() => loadInt('miniXp', 10))
   const [blockXp, setBlockXp] = useState(() => loadInt('blockXp', 50))
+  const [xpMode, setXpMode] = useState(() => loadJSON('xpMode', 'current'))
 
   const recurringTasksRef = useRef(recurringTasks)
   recurringTasksRef.current = recurringTasks
@@ -39,6 +40,7 @@ export default function useGameState() {
   useEffect(() => { localStorage.setItem('totalXp', totalXp.toString()) }, [totalXp])
   useEffect(() => { localStorage.setItem('miniXp', miniXp.toString()) }, [miniXp])
   useEffect(() => { localStorage.setItem('blockXp', blockXp.toString()) }, [blockXp])
+  useEffect(() => { localStorage.setItem('xpMode', JSON.stringify(xpMode)) }, [xpMode])
 
   const level = Math.floor(totalXp / 100) + 1
   const currentLevelXp = totalXp % 100
@@ -159,6 +161,7 @@ export default function useGameState() {
     totalXp, setTotalXp,
     miniXp, setMiniXp,
     blockXp, setBlockXp,
+    xpMode, setXpMode,
     level, currentLevelXp, nextLevelXp,
     nextReward,
     addTask, completeTask,

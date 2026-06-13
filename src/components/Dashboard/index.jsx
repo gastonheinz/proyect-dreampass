@@ -8,9 +8,11 @@ export default function Dashboard({ game, displayedXp, regAnim }) {
   const [completedMinis, setCompletedMinis] = useState(0)
   const [completedBlocks, setCompletedBlocks] = useState(0)
 
-  const { level, currentLevelXp, nextLevelXp, totalXp, nextReward, tasks, completeTask } = game
+  const { level, currentLevelXp, nextLevelXp, totalXp, nextReward, tasks, completeTask, xpMode, miniXp, blockXp } = game
 
-  const xpARecibir = ((completedBlocks > 0 ? 1 : 0) + completedMinis * 5) * ((completedMinis > 0 ? 1 : 0) + completedBlocks)
+  const xpARecibir = xpMode === 'classic'
+    ? (completedMinis * miniXp) + (completedBlocks * blockXp)
+    : (1 + completedMinis * 5) * (1 + completedBlocks * 5)
 
   return (
     <div className="space-y-8">
@@ -38,6 +40,9 @@ export default function Dashboard({ game, displayedXp, regAnim }) {
         setCompletedMinis={setCompletedMinis}
         completedBlocks={completedBlocks}
         setCompletedBlocks={setCompletedBlocks}
+        xpMode={xpMode}
+        miniXp={miniXp}
+        blockXp={blockXp}
       />
       <TaskList tasks={tasks} onComplete={completeTask} />
     </div>

@@ -9,6 +9,8 @@ export default function Config({ game }) {
         setMiniXp={game.setMiniXp}
         blockXp={game.blockXp}
         setBlockXp={game.setBlockXp}
+        xpMode={game.xpMode}
+        setXpMode={game.setXpMode}
         onReset={game.resetLevel}
         onGenerateTasks={game.generateDailyTasks}
       />
