@@ -27,7 +27,12 @@ function App() {
   const [isRegistering, setIsRegistering] = useState(false);
   const [registerXpDisplay, setRegisterXpDisplay] = useState(0);
   const [showXpResult, setShowXpResult] = useState(false);
+  const [animPhase, setAnimPhase] = useState('idle'); // 'left' | 'right' | 'total' | 'idle'
+  const [animLeftValue, setAnimLeftValue] = useState(0);
+  const [animRightValue, setAnimRightValue] = useState(0);
   const lastXpAddedRef = useRef(0);
+  const leftRef = useRef(0);
+  const rightRef = useRef(0);
 
   // Animación nivel
   const [showLevelUp, setShowLevelUp] = useState(null);
@@ -36,6 +41,8 @@ function App() {
   const pendingLevelsRef = useRef([]);
   const prevLevelRef = useRef(Math.floor((parseInt(localStorage.getItem('totalXp')) || 0) / 100) + 1);
   const claimOrderRef = useRef(0);
+  const rewardsRef = useRef(rewards);
+  rewardsRef.current = rewards;
 
   const levelsPerPage = 7;
 
@@ -47,15 +54,16 @@ function App() {
   };
 
   const { level, currentLevelXp, nextLevelXp } = getLevelInfo(displayedXp);
+  const { level: realLevel, currentLevelXp: realCurrentLevelXp } = getLevelInfo(totalXp);
   
   // Buscar la próxima recompensa (que aún no hemos alcanzado)
   const nextReward = [...rewards]
     .sort((a, b) => a.requiredLevel - b.requiredLevel)
-    .find(r => r.requiredLevel > level);
+    .find(r => r.requiredLevel > realLevel);
 
-  const xpFaltante = nextReward ? (nextReward.requiredLevel - level) * 100 - currentLevelXp : 0;
-  const xpARecibir = (10 + (10 * completedMinis)) * (1 + completedBlocks);
-  const alcanzaRecompensa = xpARecibir >= xpFaltante && xpFaltante > 0;
+  const xpFaltante = nextReward ? (nextReward.requiredLevel - realLevel) * 100 - realCurrentLevelXp : 0;
+  const xpARecibir = ((completedBlocks > 0 ? 1 : 0) + completedMinis * 5) * ((completedMinis > 0 ? 1 : 0) + completedBlocks);
+  const alcanzaRecompensa = !isRegistering && !showXpResult && xpARecibir >= xpFaltante && xpFaltante > 0;
 
   const generateDailyTasks = () => {
     const dayOfWeek = (new Date().getDay() + 6) % 7; // 0=Mon, 6=Sun
@@ -106,14 +114,14 @@ function App() {
     }
     if (!showLevelUp && !levelUpToast && pendingLevelsRef.current.length > 0) {
       const nextLevel = pendingLevelsRef.current.shift();
-      const unlocked = rewards.filter(r => r.requiredLevel === nextLevel);
+      const unlocked = rewardsRef.current.filter(r => r.requiredLevel === nextLevel);
       if (unlocked.length > 0) {
         setShowLevelUp({ level: nextLevel, rewards: unlocked });
       } else {
         setLevelUpToast(nextLevel);
       }
     }
-  }, [level, showLevelUp, levelUpToast, rewards]);
+  }, [level, showLevelUp, levelUpToast]);
 
   // Auto-dismiss toast/popup después de un tiempo
   useEffect(() => {
@@ -180,11 +188,18 @@ function App() {
   };
 
   const registerCompletedTasks = () => {
-    const xpToAdd = (10 + (10 * completedMinis)) * (1 + completedBlocks);
-    if (xpToAdd > 0) {
-      registerTargetRef.current = xpToAdd;
-      setIsRegistering(true);
+    const left = (completedBlocks > 0 ? 1 : 0) + completedMinis * 5;
+    const right = (completedMinis > 0 ? 1 : 0) + completedBlocks;
+    const total = left * right;
+    if (total > 0) {
+      registerTargetRef.current = total;
+      leftRef.current = left;
+      rightRef.current = right;
+      setAnimPhase('left');
+      setAnimLeftValue(0);
+      setAnimRightValue(0);
       setRegisterXpDisplay(0);
+      setIsRegistering(true);
     }
   };
 
@@ -192,32 +207,58 @@ function App() {
 
   useEffect(() => {
     if (!isRegistering) return;
-    const target = registerTargetRef.current;
-    if (registerXpDisplay < target) {
-      const step = Math.max(1, Math.ceil(target / 40));
-      const timer = setTimeout(() => {
-        setRegisterXpDisplay(prev => {
-          const next = prev + step;
-          if (next >= target) return target;
-          return next;
-        });
-      }, 25);
-      return () => clearTimeout(timer);
-    } else {
-      lastXpAddedRef.current = target;
-      setShowXpResult(true);
-      setTotalXp(prev => prev + target);
-      setCompletedMinis(0);
-      setCompletedBlocks(0);
-      setIsRegistering(false);
+
+    if (animPhase === 'left') {
+      if (animLeftValue < leftRef.current) {
+        const step = Math.max(1, Math.ceil(leftRef.current / 20));
+        const timer = setTimeout(() => {
+          setAnimLeftValue(prev => Math.min(prev + step, leftRef.current));
+        }, 50);
+        return () => clearTimeout(timer);
+      } else {
+        const timer = setTimeout(() => setAnimPhase('right'), 300);
+        return () => clearTimeout(timer);
+      }
+    } else if (animPhase === 'right') {
+      if (animRightValue < rightRef.current) {
+        const step = Math.max(1, Math.ceil(rightRef.current / 20));
+        const timer = setTimeout(() => {
+          setAnimRightValue(prev => Math.min(prev + step, rightRef.current));
+        }, 50);
+        return () => clearTimeout(timer);
+      } else {
+        const timer = setTimeout(() => setAnimPhase('total'), 300);
+        return () => clearTimeout(timer);
+      }
+    } else if (animPhase === 'total') {
+      const target = registerTargetRef.current;
+      if (registerXpDisplay < target) {
+        const step = Math.max(1, Math.ceil(target / 40));
+        const timer = setTimeout(() => {
+          setRegisterXpDisplay(prev => {
+            const next = prev + step;
+            if (next >= target) return target;
+            return next;
+          });
+        }, 25);
+        return () => clearTimeout(timer);
+      } else {
+        lastXpAddedRef.current = target;
+        setShowXpResult(true);
+        setTotalXp(prev => prev + target);
+        setIsRegistering(false);
+      }
     }
-  }, [isRegistering, registerXpDisplay]);
+  }, [isRegistering, animPhase, animLeftValue, animRightValue, registerXpDisplay]);
 
   useEffect(() => {
     if (showXpResult && displayedXp === totalXp) {
       const timer = setTimeout(() => {
         setShowXpResult(false);
         setRegisterXpDisplay(0);
+        setCompletedMinis(0);
+        setCompletedBlocks(0);
+        setAnimPhase('idle');
       }, 600);
       return () => clearTimeout(timer);
     }
@@ -264,7 +305,7 @@ function App() {
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans p-4 md:p-8">
       {/* Animación Nivel Up */}
       {showLevelUp && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md animate-popup p-4">
+        <div key="levelup-popup" className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md animate-popup p-4">
           <div className="bg-white p-10 rounded-3xl text-center shadow-2xl max-w-lg w-full relative">
             <button 
               onClick={() => setShowLevelUp(null)}
@@ -297,7 +338,7 @@ function App() {
       )}
 
       {levelUpToast && (
-        <div className="fixed top-0 left-0 right-0 z-50 flex justify-center pt-8 pointer-events-none">
+        <div key={`toast-${levelUpToast}`} className="fixed top-0 left-0 right-0 z-50 flex justify-center pt-8 pointer-events-none">
           <div className="bg-indigo-600 text-white px-8 py-5 rounded-2xl shadow-2xl flex items-center gap-4 animate-toast pointer-events-auto border border-indigo-400">
             <span className="text-3xl">⬆</span>
             <div>
@@ -450,8 +491,12 @@ function App() {
               <h3 className="text-lg font-bold mb-4">Registrar tareas realizadas hoy</h3>
               <div className="flex flex-col gap-4">
                 <div className="flex items-center gap-4">
+                  {(isRegistering || showXpResult) && <span className="text-2xl font-black text-sky-600 whitespace-nowrap">{completedBlocks > 0 ? '1 +' : '0 +'}</span>}
                   <div className={`flex-1 p-4 rounded-xl border transition-all duration-300 bg-sky-100 ${alcanzaRecompensa ? 'animate-fire-blue border-sky-300' : 'border-sky-200'}`}>
-                    <label className="block text-sm font-medium mb-1 text-sky-800">Tareas Mini:</label>
+                    <div className="flex justify-between items-center mb-1">
+                      <label className="block text-sm font-medium text-sky-800">Tareas Mini:</label>
+                      <span className="text-xs font-bold text-sky-600 bg-sky-200 px-2 py-0.5 rounded">×5</span>
+                    </div>
                     <input 
                       type="number" 
                       min="0" 
@@ -460,7 +505,8 @@ function App() {
                       className="w-full border rounded-lg p-2.5 bg-white focus:ring-2 focus:ring-sky-500 outline-none transition-all" 
                     />
                   </div>
-                  <span className="text-2xl font-black text-slate-400">X</span>
+                  <span className="text-2xl font-black text-slate-400">×</span>
+                  {(isRegistering || showXpResult) && <span className="text-2xl font-black text-red-600 whitespace-nowrap">{completedMinis > 0 ? '1 +' : '0 +'}</span>}
                   <div className={`flex-1 p-4 rounded-xl border transition-all duration-300 bg-red-100 ${alcanzaRecompensa ? 'animate-fire-red border-red-300' : 'border-red-200'}`}>
                     <label className="block text-sm font-medium mb-1 text-red-800">Tareas Bloque:</label>
                     <input 
@@ -472,24 +518,91 @@ function App() {
                     />
                   </div>
                 </div>
-                <div className="bg-indigo-50 p-4 rounded-xl flex justify-between items-center border border-indigo-100">
-                  <div>
-                    <span className="text-sm font-medium text-indigo-900">Total XP a recibir:</span>
-                    <span className="block text-2xl font-black text-indigo-600">
-                      {isRegistering ? `+${registerXpDisplay}` : showXpResult ? `+${lastXpAddedRef.current}` : ''} 
-                    </span>
-                  </div>
-                  <button 
-                    onClick={registerCompletedTasks} 
-                    disabled={isRegistering || ((10 + (10 * completedMinis)) * (1 + completedBlocks)) === 0}
-                    className={`px-5 py-2.5 rounded-lg font-semibold transition-all duration-200 ${
-                      !isRegistering && ((10 + (10 * completedMinis)) * (1 + completedBlocks)) > 0 
-                        ? 'bg-indigo-600 text-white hover:bg-indigo-700 active:scale-95 shadow-md hover:shadow-lg' 
-                        : 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
-                    }`}
-                  >
-                    Registrar y ganar XP
-                  </button>
+                <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
+                  {isRegistering || showXpResult ? (
+                    <div className="flex flex-col items-center gap-1">
+                      {animPhase === 'left' && (
+                        <div className="text-center">
+                          <div className="text-lg font-black text-indigo-600">
+                            ({completedBlocks > 0 ? '1' : '0'} + <span className="text-sky-600">{animLeftValue}</span>) × ({completedMinis > 0 ? '1' : '0'} + {completedBlocks})
+                          </div>
+                          <div className="text-lg font-black text-indigo-600 mt-1">
+                            (<span className="text-sky-600">{(completedBlocks > 0 ? 1 : 0) + animLeftValue}</span>)
+                          </div>
+                          <div className="text-xs text-indigo-400 mt-1">Calculando multiplicando Mini...</div>
+                        </div>
+                      )}
+                      {animPhase === 'right' && (
+                        <div className="text-center">
+                          <div className="text-lg font-black text-indigo-600">
+                            <span>({completedBlocks > 0 ? '1' : '0'} + {completedMinis * 5})</span>
+                            <span className="mx-2">×</span>
+                            <span>({completedMinis > 0 ? '1' : '0'} + <span className="text-red-600">{animRightValue}</span>)</span>
+                          </div>
+                          <div className="text-lg font-black text-indigo-600 mt-1 flex justify-center gap-3">
+                            <span>({(completedBlocks > 0 ? 1 : 0) + completedMinis * 5})</span>
+                            <span>×</span>
+                            <span>(<span className="text-red-600">{(completedMinis > 0 ? 1 : 0) + animRightValue}</span>)</span>
+                          </div>
+                          <div className="text-xs text-indigo-400 mt-1">Calculando multiplicando Bloque...</div>
+                        </div>
+                      )}
+                      {animPhase === 'total' && !showXpResult && (
+                        <div className="text-center">
+                          <div className="text-lg font-black text-indigo-600">
+                            ({completedBlocks > 0 ? '1' : '0'} + {completedMinis * 5})
+                            <span className="mx-2">×</span>
+                            ({completedMinis > 0 ? '1' : '0'} + {completedBlocks})
+                          </div>
+                          <div className="text-lg font-black text-indigo-600 mt-1 flex justify-center gap-3">
+                            <span>({(completedBlocks > 0 ? 1 : 0) + completedMinis * 5})</span>
+                            <span>×</span>
+                            <span>({(completedMinis > 0 ? 1 : 0) + completedBlocks})</span>
+                            <span>=</span>
+                            <span className="text-indigo-700">+{registerXpDisplay}</span>
+                          </div>
+                          <div className="text-xs text-indigo-400 mt-1">Calculando XP total...</div>
+                        </div>
+                      )}
+                      {showXpResult && (
+                        <div className="text-center">
+                          <div className="text-lg font-black text-indigo-600">
+                            ({completedBlocks > 0 ? '1' : '0'} + {completedMinis * 5})
+                            <span className="mx-2">×</span>
+                            ({completedMinis > 0 ? '1' : '0'} + {completedBlocks})
+                          </div>
+                          <div className="text-lg font-black text-indigo-600 mt-1 flex justify-center gap-3">
+                            <span>({(completedBlocks > 0 ? 1 : 0) + completedMinis * 5})</span>
+                            <span>×</span>
+                            <span>({(completedMinis > 0 ? 1 : 0) + completedBlocks})</span>
+                            <span>=</span>
+                            <span className="text-emerald-600">+{lastXpAddedRef.current}</span>
+                          </div>
+                          <div className="text-xs text-emerald-600 font-medium mt-1">¡XP añadida!</div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <span className="text-sm font-medium text-indigo-900">Total XP a recibir:</span>
+                        <span className="block text-2xl font-black text-indigo-600">
+                          +{((completedBlocks > 0 ? 1 : 0) + completedMinis * 5) * ((completedMinis > 0 ? 1 : 0) + completedBlocks)}
+                        </span>
+                      </div>
+                      <button 
+                        onClick={registerCompletedTasks} 
+                        disabled={isRegistering || (((completedBlocks > 0 ? 1 : 0) + completedMinis * 5) * ((completedMinis > 0 ? 1 : 0) + completedBlocks)) === 0}
+                        className={`px-5 py-2.5 rounded-lg font-semibold transition-all duration-200 ${
+                          !isRegistering && (((completedBlocks > 0 ? 1 : 0) + completedMinis * 5) * ((completedMinis > 0 ? 1 : 0) + completedBlocks)) > 0 
+                            ? 'bg-indigo-600 text-white hover:bg-indigo-700 active:scale-95 shadow-md hover:shadow-lg' 
+                            : 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
+                        }`}
+                      >
+                        Registrar y ganar XP
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
