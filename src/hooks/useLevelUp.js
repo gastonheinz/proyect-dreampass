@@ -5,8 +5,6 @@ export default function useLevelUp(totalXp, rewards) {
   const [levelUpToast, setLevelUpToast] = useState(null)
   const pendingLevelsRef = useRef([])
   const prevLevelRef = useRef(Math.floor(totalXp / 100) + 1)
-  const rewardsRef = useRef(rewards)
-  rewardsRef.current = rewards
 
   const level = Math.floor(totalXp / 100) + 1
 
@@ -19,14 +17,14 @@ export default function useLevelUp(totalXp, rewards) {
     }
     if (!showLevelUp && !levelUpToast && pendingLevelsRef.current.length > 0) {
       const nextLevel = pendingLevelsRef.current.shift()
-      const unlocked = rewardsRef.current.filter(r => r.requiredLevel === nextLevel)
+      const unlocked = rewards.filter(r => r.requiredLevel === nextLevel)
       if (unlocked.length > 0) {
         setShowLevelUp({ level: nextLevel, rewards: unlocked })
       } else {
         setLevelUpToast(nextLevel)
       }
     }
-  }, [level, showLevelUp, levelUpToast])
+  }, [level, showLevelUp, levelUpToast, rewards])
 
   useEffect(() => {
     if (showLevelUp) {

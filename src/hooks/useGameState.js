@@ -27,11 +27,13 @@ export default function useGameState() {
   const [claimedRewards, setClaimedRewards] = useState(() => loadJSON('claimedRewards', []))
   const [totalXp, setTotalXp] = useState(() => loadInt('totalXp', 0))
   const [miniXp, setMiniXp] = useState(() => loadInt('miniXp', 10))
-  const [blockXp, setBlockXp] = useState(() => loadInt('blockXp', 50))
+  const [blockXp, setBlockXp] = useState(() => loadInt('blockXp', 100))
   const [xpMode, setXpMode] = useState(() => loadJSON('xpMode', 'current'))
 
   const recurringTasksRef = useRef(recurringTasks)
-  recurringTasksRef.current = recurringTasks
+  useEffect(() => {
+    recurringTasksRef.current = recurringTasks
+  })
 
   useEffect(() => { localStorage.setItem('tasks', JSON.stringify(tasks)) }, [tasks])
   useEffect(() => { localStorage.setItem('recurringTasks', JSON.stringify(recurringTasks)) }, [recurringTasks])

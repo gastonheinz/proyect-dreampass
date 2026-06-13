@@ -1,4 +1,16 @@
+import { useMemo } from 'react'
+
 export default function LevelUpPopup({ show, onClose }) {
+  const confetti = useMemo(
+    () =>
+      Array.from({ length: 30 }).map((_, i) => ({
+        id: i,
+        left: `${((i * 97 + 13) % 100)}vw`,
+        delay: `${((i * 37 + 7) % 20) / 10}s`,
+      })),
+    [],
+  )
+
   if (!show) return null
 
   return (
@@ -28,8 +40,8 @@ export default function LevelUpPopup({ show, onClose }) {
           </div>
         )}
       </div>
-      {Array.from({ length: 30 }).map((_, i) => (
-        <div key={i} className="absolute w-4 h-4 bg-yellow-400 animate-confetti" style={{ left: `${Math.random() * 100}vw`, animationDelay: `${Math.random() * 2}s` }} />
+      {confetti.map(c => (
+        <div key={c.id} className="absolute w-4 h-4 bg-yellow-400 animate-confetti" style={{ left: c.left, animationDelay: c.delay }} />
       ))}
     </div>
   )
