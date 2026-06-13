@@ -4,6 +4,7 @@ function App() {
   const [tasks, setTasks] = useState(JSON.parse(localStorage.getItem('tasks')) || []);
   const [recurringTasks, setRecurringTasks] = useState(JSON.parse(localStorage.getItem('recurringTasks')) || []);
   const [rewards, setRewards] = useState(JSON.parse(localStorage.getItem('rewards')) || []);
+  const [claimedRewards, setClaimedRewards] = useState(JSON.parse(localStorage.getItem('claimedRewards')) || []);
   const [totalXp, setTotalXp] = useState(parseInt(localStorage.getItem('totalXp')) || 0);
   const [displayedXp, setDisplayedXp] = useState(parseInt(localStorage.getItem('totalXp')) || 0);
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -23,11 +24,18 @@ function App() {
   // Estados para tareas rápidas completadas hoy (Mini/Bloque)
   const [completedMinis, setCompletedMinis] = useState(0);
   const [completedBlocks, setCompletedBlocks] = useState(0);
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [registerXpDisplay, setRegisterXpDisplay] = useState(0);
+  const [showXpResult, setShowXpResult] = useState(false);
+  const lastXpAddedRef = useRef(0);
 
   // Animación nivel
-  const [levelUpQueue, setLevelUpQueue] = useState([]);
   const [showLevelUp, setShowLevelUp] = useState(null);
+  const [levelUpToast, setLevelUpToast] = useState(null);
+  const [hoveredLevel, setHoveredLevel] = useState(null);
+  const pendingLevelsRef = useRef([]);
   const prevLevelRef = useRef(Math.floor((parseInt(localStorage.getItem('totalXp')) || 0) / 100) + 1);
+  const claimOrderRef = useRef(0);
 
   const levelsPerPage = 7;
 
@@ -44,6 +52,10 @@ function App() {
   const nextReward = [...rewards]
     .sort((a, b) => a.requiredLevel - b.requiredLevel)
     .find(r => r.requiredLevel > level);
+
+  const xpFaltante = nextReward ? (nextReward.requiredLevel - level) * 100 - currentLevelXp : 0;
+  const xpARecibir = (10 + (10 * completedMinis)) * (1 + completedBlocks);
+  const alcanzaRecompensa = xpARecibir >= xpFaltante && xpFaltante > 0;
 
   const generateDailyTasks = () => {
     const dayOfWeek = (new Date().getDay() + 6) % 7; // 0=Mon, 6=Sun
@@ -69,7 +81,9 @@ function App() {
   useEffect(() => {
     if (displayedXp === totalXp) return;
     const diff = totalXp - displayedXp;
-    const step = Math.max(1, Math.ceil(Math.abs(diff) / 30));
+    const absDiff = Math.abs(diff);
+    const divisor = absDiff > 300 ? 120 : 60;
+    const step = Math.max(1, Math.ceil(absDiff / divisor));
     const direction = diff > 0 ? 1 : -1;
     const timer = setTimeout(() => {
       setDisplayedXp(prev => {
@@ -82,44 +96,47 @@ function App() {
     return () => clearTimeout(timer);
   }, [displayedXp, totalXp]);
 
-  // Detectar subidas de nivel conforme la barra anima
+  // Detectar subidas de nivel y mostrar toast/popup
   useEffect(() => {
     if (level > prevLevelRef.current) {
-        const levelsGained = [];
-        for (let lv = prevLevelRef.current + 1; lv <= level; lv++) {
-            levelsGained.push(lv);
-        }
-        setLevelUpQueue(prev => [...prev, ...levelsGained]);
+      for (let lv = prevLevelRef.current + 1; lv <= level; lv++) {
+        pendingLevelsRef.current.push(lv);
+      }
+      prevLevelRef.current = level;
     }
-    prevLevelRef.current = level;
-  }, [level]);
+    if (!showLevelUp && !levelUpToast && pendingLevelsRef.current.length > 0) {
+      const nextLevel = pendingLevelsRef.current.shift();
+      const unlocked = rewards.filter(r => r.requiredLevel === nextLevel);
+      if (unlocked.length > 0) {
+        setShowLevelUp({ level: nextLevel, rewards: unlocked });
+      } else {
+        setLevelUpToast(nextLevel);
+      }
+    }
+  }, [level, showLevelUp, levelUpToast, rewards]);
+
+  // Auto-dismiss toast/popup después de un tiempo
+  useEffect(() => {
+    if (showLevelUp) {
+      const timer = setTimeout(() => setShowLevelUp(null), 7000);
+      return () => clearTimeout(timer);
+    }
+    if (levelUpToast) {
+      const timer = setTimeout(() => setLevelUpToast(null), 3500);
+      return () => clearTimeout(timer);
+    }
+  }, [showLevelUp, levelUpToast]);
 
   // Persistir datos en localStorage
   useEffect(() => {
     localStorage.setItem('tasks', JSON.stringify(tasks));
     localStorage.setItem('recurringTasks', JSON.stringify(recurringTasks));
     localStorage.setItem('rewards', JSON.stringify(rewards));
+    localStorage.setItem('claimedRewards', JSON.stringify(claimedRewards));
     localStorage.setItem('totalXp', totalXp.toString());
     localStorage.setItem('miniXp', miniXp.toString());
     localStorage.setItem('blockXp', blockXp.toString());
-  }, [tasks, recurringTasks, rewards, totalXp, miniXp, blockXp]);
-
-  // Procesar cola de subidas de nivel de manera secuencial
-  useEffect(() => {
-    if (levelUpQueue.length > 0 && !showLevelUp) {
-      const nextLevelToAnimate = levelUpQueue[0];
-      const unlocked = rewards.filter(r => r.requiredLevel === nextLevelToAnimate);
-      
-      setShowLevelUp({ level: nextLevelToAnimate, rewards: unlocked });
-      
-      const timer = setTimeout(() => {
-        setShowLevelUp(null);
-        setLevelUpQueue(prev => prev.slice(1));
-      }, 4000); // 4 segundos de animación por cada subida de nivel
-      
-      return () => clearTimeout(timer);
-    }
-  }, [levelUpQueue, showLevelUp, rewards]);
+  }, [tasks, recurringTasks, rewards, claimedRewards, totalXp, miniXp, blockXp]);
 
   const addTask = () => {
     if (!taskName) return;
@@ -163,13 +180,48 @@ function App() {
   };
 
   const registerCompletedTasks = () => {
-    const xpToAdd = (completedMinis * miniXp) + (completedBlocks * blockXp);
+    const xpToAdd = (10 + (10 * completedMinis)) * (1 + completedBlocks);
     if (xpToAdd > 0) {
-      setTotalXp(totalXp + xpToAdd);
-      setCompletedMinis(0);
-      setCompletedBlocks(0);
+      registerTargetRef.current = xpToAdd;
+      setIsRegistering(true);
+      setRegisterXpDisplay(0);
     }
   };
+
+  const registerTargetRef = useRef(0);
+
+  useEffect(() => {
+    if (!isRegistering) return;
+    const target = registerTargetRef.current;
+    if (registerXpDisplay < target) {
+      const step = Math.max(1, Math.ceil(target / 40));
+      const timer = setTimeout(() => {
+        setRegisterXpDisplay(prev => {
+          const next = prev + step;
+          if (next >= target) return target;
+          return next;
+        });
+      }, 25);
+      return () => clearTimeout(timer);
+    } else {
+      lastXpAddedRef.current = target;
+      setShowXpResult(true);
+      setTotalXp(prev => prev + target);
+      setCompletedMinis(0);
+      setCompletedBlocks(0);
+      setIsRegistering(false);
+    }
+  }, [isRegistering, registerXpDisplay]);
+
+  useEffect(() => {
+    if (showXpResult && displayedXp === totalXp) {
+      const timer = setTimeout(() => {
+        setShowXpResult(false);
+        setRegisterXpDisplay(0);
+      }, 600);
+      return () => clearTimeout(timer);
+    }
+  }, [showXpResult, displayedXp, totalXp]);
 
   const deleteTask = (taskId) => {
     setTasks(tasks.filter(t => t.id !== taskId));
@@ -199,6 +251,13 @@ function App() {
     setRewards(rewards.filter(r => r.id !== rewardId));
   };
 
+  const claimReward = (reward) => {
+    if (!claimedRewards.find(cr => cr.id === reward.id)) {
+      claimOrderRef.current += 1;
+      setClaimedRewards([...claimedRewards, { ...reward, claimedAt: claimOrderRef.current }]);
+    }
+  };
+
   const visibleLevels = Array.from({ length: levelsPerPage }, (_, i) => passOffset + i + 1);
 
   return (
@@ -208,7 +267,7 @@ function App() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md animate-popup p-4">
           <div className="bg-white p-10 rounded-3xl text-center shadow-2xl max-w-lg w-full relative">
             <button 
-              onClick={() => { setShowLevelUp(null); setLevelUpQueue(prev => prev.slice(1)); }}
+              onClick={() => setShowLevelUp(null)}
               className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-700 transition-all text-lg font-bold"
             >
               ✕
@@ -218,7 +277,8 @@ function App() {
             
             {showLevelUp.rewards.length > 0 && (
                 <div className='bg-indigo-50 p-4 rounded-xl'>
-                    <h3 className='font-bold text-indigo-900 mb-3'>¡Nuevas recompensas!</h3>
+                    <h3 className='font-bold text-indigo-900 mb-3'>¡Nuevas recompensas disponibles!</h3>
+                    <p className='text-sm text-indigo-600 mb-3'>Reclámalas desde tu inventario.</p>
                     <div className='flex flex-wrap justify-center gap-3'>
                         {showLevelUp.rewards.map(r => (
                             <div key={r.id} className='flex flex-col items-center gap-1'>
@@ -233,6 +293,18 @@ function App() {
           {Array.from({ length: 30 }).map((_, i) => (
             <div key={i} className="absolute w-4 h-4 bg-yellow-400 animate-confetti" style={{left: `${Math.random()*100}vw`, animationDelay: `${Math.random()*2}s`}}></div>
           ))}
+        </div>
+      )}
+
+      {levelUpToast && (
+        <div className="fixed top-0 left-0 right-0 z-50 flex justify-center pt-8 pointer-events-none">
+          <div className="bg-indigo-600 text-white px-8 py-5 rounded-2xl shadow-2xl flex items-center gap-4 animate-toast pointer-events-auto border border-indigo-400">
+            <span className="text-3xl">⬆</span>
+            <div>
+              <p className="text-xl font-bold">¡Nivel {levelUpToast}!</p>
+              <p className="text-sm text-indigo-200">Has subido de nivel</p>
+            </div>
+          </div>
         </div>
       )}
 
@@ -261,6 +333,17 @@ function App() {
           >
             Configuración
           </button>
+          <button 
+            className={`px-6 py-2.5 rounded-lg font-semibold transition-all duration-200 relative ${activeTab === 'inventario' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-600 hover:text-indigo-600'}`} 
+            onClick={() => setActiveTab('inventario')}
+          >
+            Inventario
+            {(() => {
+              const count = rewards.filter(r => r.requiredLevel <= level && !claimedRewards.find(cr => cr.id === r.id)).length;
+              if (count === 0) return null;
+              return <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full">{count}</span>;
+            })()}
+          </button>
         </nav>
 
         {activeTab === 'dashboard' ? (
@@ -268,15 +351,7 @@ function App() {
             <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-bold">Progreso Nivel Actual ({level})</h2>
-                <div className='flex items-center gap-3'>
-                    {nextReward && (
-                        <div className='flex items-center gap-2 bg-slate-100 p-2 rounded-lg'>
-                            {nextReward.imageUrl && <img src={nextReward.imageUrl} alt={nextReward.name} className="w-8 h-8 object-cover rounded" />}
-                            <span className='text-xs font-semibold'>Prox: {nextReward.name} (Lv.{nextReward.requiredLevel})</span>
-                        </div>
-                    )}
-                    <span className="text-3xl font-black text-indigo-600">{currentLevelXp} <span className="text-lg font-medium text-slate-500">/ {nextLevelXp} XP</span></span>
-                </div>
+                <span className="text-3xl font-black text-indigo-600">{currentLevelXp} <span className="text-lg font-medium text-slate-500">/ {nextLevelXp} XP</span></span>
               </div>
               <div className="w-full bg-slate-100 rounded-lg h-6 overflow-hidden border border-slate-200">
                 <div 
@@ -284,73 +359,131 @@ function App() {
                     style={{ width: `${(currentLevelXp / nextLevelXp) * 100}%` }}
                 ></div>
               </div>
+              {nextReward && (() => {
+                return (
+                <div className={`mt-4 flex items-center gap-3 p-4 rounded-xl border transition-all duration-300 ${alcanzaRecompensa ? 'bg-emerald-50 border-emerald-300 animate-reward-glow' : 'bg-indigo-50 border-indigo-100'}`}>
+                    {nextReward.imageUrl && <img src={nextReward.imageUrl} alt={nextReward.name} className="w-12 h-12 object-cover rounded-lg border-2 border-indigo-200" />}
+                    <div className="flex-1">
+                        <span className={`text-xs font-semibold ${alcanzaRecompensa ? 'text-emerald-700' : 'text-indigo-600'}`}>SIGUIENTE RECOMPENSA</span>
+                        <p className='text-lg font-bold text-indigo-900'>{nextReward.name}</p>
+                        <p className='text-sm text-indigo-600'>Nivel {nextReward.requiredLevel}</p>
+                        <p className={`text-sm font-bold mt-1 ${alcanzaRecompensa ? 'text-emerald-700' : 'text-indigo-600'}`}>
+                          {alcanzaRecompensa ? '✓ ¡Alcanzas esta recompensa!' : (
+                            <div className="inline-flex items-center gap-2 bg-indigo-100 px-4 py-2 rounded-xl border border-indigo-200">
+                              <span className="text-xs font-semibold text-indigo-700">OBTÉN</span>
+                              <span className="text-2xl font-black text-indigo-600">{xpFaltante}</span>
+                              <span className="flex items-center gap-1 text-xs font-bold text-indigo-500">
+                                <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                                  <path d="M10 1L13 7L20 8L15 13L16 20L10 16.5L4 20L5 13L0 8L7 7L10 1Z" />
+                                </svg>
+                                XP
+                              </span>
+                            </div>
+                          )}
+                        </p>
+                    </div>
+                </div>
+                );
+              })()}
             </div>
 
-            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-bold">Progreso del Pase</h2>
-                <div className="flex gap-2">
-                  <button onClick={() => setPassOffset(Math.max(0, passOffset - levelsPerPage))} className="bg-slate-100 p-2 rounded-lg hover:bg-slate-200 text-slate-600">◀</button>
-                  <button onClick={() => setPassOffset(Math.min(93, passOffset + levelsPerPage))} className="bg-slate-100 p-2 rounded-lg hover:bg-slate-200 text-slate-600">▶</button>
+            <div className="relative">
+              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-xl font-bold">Progreso del Pase</h2>
+                  <div className="flex gap-2">
+                    <button onClick={() => setPassOffset(Math.max(0, passOffset - levelsPerPage))} className="bg-slate-100 p-2 rounded-lg hover:bg-slate-200 text-slate-600">◀</button>
+                    <button onClick={() => setPassOffset(Math.min(93, passOffset + levelsPerPage))} className="bg-slate-100 p-2 rounded-lg hover:bg-slate-200 text-slate-600">▶</button>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-7 gap-2">
+                  {visibleLevels.map(lv => {
+                    const levelRewards = rewards.filter(r => r.requiredLevel === lv);
+                    return (
+                      <div key={lv}
+                        onMouseEnter={() => setHoveredLevel(lv)}
+                        onMouseLeave={() => setHoveredLevel(null)}
+                        className={`relative p-3 border-2 rounded-lg flex flex-col items-center justify-between min-h-[120px] transition-transform hover:scale-105 cursor-pointer ${level >= lv ? 'bg-indigo-600 border-indigo-700 text-white' : 'bg-slate-50 border-slate-200 hover:border-indigo-300'}`}>
+                        <span className={`text-xs font-bold mb-2 ${level >= lv ? 'text-indigo-100' : 'text-slate-500'}`}>Lv.{lv}</span>
+                        <div className="flex-grow flex flex-col justify-center gap-1 w-full">
+                          {levelRewards.map(r => {
+                            const isClaimed = claimedRewards.find(cr => cr.id === r.id);
+                            return (
+                              <div key={r.id}
+                                className={`flex flex-col items-center text-center p-1 rounded transition-all ${level >= lv ? 'bg-indigo-700 text-white' : 'bg-slate-200 text-slate-600'}`}>
+                                {r.imageUrl && <img src={r.imageUrl} alt={r.name} className="w-8 h-8 object-cover rounded mb-1" />}
+                                <span className="text-[10px] break-words w-full">{r.name}</span>
+                                {isClaimed && <span className="text-[9px] font-bold text-emerald-400">✓</span>}
+                              </div>
+                            );
+                          })}
+                        </div>
+                        {level === lv && <div className="absolute -bottom-2 w-4 h-4 bg-indigo-600 rotate-45 rounded-sm"></div>}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
-              
-              <div className="grid grid-cols-7 gap-2">
-                {visibleLevels.map(lv => {
-                  const levelRewards = rewards.filter(r => r.requiredLevel === lv);
-                  return (
-                    <div key={lv} className={`relative p-3 border-2 rounded-lg flex flex-col items-center justify-between min-h-[120px] ${level > lv ? 'bg-indigo-600 border-indigo-700 text-white' : level === lv ? 'bg-indigo-50 border-indigo-200' : 'bg-slate-50 border-slate-200'}`}>
-                      <span className={`text-xs font-bold mb-2 ${level > lv ? 'text-indigo-100' : 'text-slate-500'}`}>Lv.{lv}</span>
-                      <div className="flex-grow flex flex-col justify-center gap-1 w-full">
-                        {levelRewards.map(r => (
-                          <div key={r.id} className={`flex flex-col items-center text-center p-1 rounded ${level > lv ? 'bg-indigo-700 text-white' : level === lv ? 'bg-indigo-100 text-indigo-800' : 'bg-slate-200 text-slate-600'}`}>
-                            {r.imageUrl && <img src={r.imageUrl} alt={r.name} className="w-8 h-8 object-cover rounded mb-1" />}
-                            <span className="text-[10px] break-words w-full">{r.name}</span>
-                          </div>
-                        ))}
-                      </div>
-                      {level === lv && <div className="absolute -bottom-2 w-4 h-4 bg-indigo-600 rotate-45 rounded-sm"></div>}
-                    </div>
-                  );
-                })}
-              </div>
+
+              {hoveredLevel && (() => {
+                const r = rewards.find(r => r.requiredLevel === hoveredLevel);
+                if (!r) return null;
+                return (
+                <div className="absolute left-full top-0 ml-3 w-56 bg-white rounded-xl border border-slate-200 shadow-xl p-5 flex flex-col items-center text-center gap-3 z-50">
+                  {r.imageUrl ? (
+                    <img src={r.imageUrl} alt={r.name} className="w-32 h-32 object-cover rounded-xl border-2 border-indigo-200" />
+                  ) : (
+                    <div className="w-32 h-32 bg-slate-100 rounded-xl border-2 border-indigo-200 flex items-center justify-center text-slate-400 text-4xl">?</div>
+                  )}
+                  <span className="font-bold text-slate-900 text-lg">{r.name}</span>
+                  <span className="text-sm text-slate-500">Nivel {r.requiredLevel}</span>
+                  {claimedRewards.find(cr => cr.id === r.id) && (
+                    <span className="text-xs text-emerald-600 font-bold">✓ Reclamada</span>
+                  )}
+                </div>
+                );
+              })()}
             </div>
 
             <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
               <h3 className="text-lg font-bold mb-4">Registrar tareas realizadas hoy</h3>
               <div className="flex flex-col gap-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1 text-slate-700">Tareas Minis ({miniXp} XP c/u):</label>
+                <div className="flex items-center gap-4">
+                  <div className={`flex-1 p-4 rounded-xl border transition-all duration-300 bg-sky-100 ${alcanzaRecompensa ? 'animate-fire-blue border-sky-300' : 'border-sky-200'}`}>
+                    <label className="block text-sm font-medium mb-1 text-sky-800">Tareas Mini:</label>
                     <input 
                       type="number" 
                       min="0" 
                       value={completedMinis} 
                       onChange={(e) => setCompletedMinis(Math.max(0, parseInt(e.target.value) || 0))} 
-                      className="w-full border rounded-lg p-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all" 
+                      className="w-full border rounded-lg p-2.5 bg-white focus:ring-2 focus:ring-sky-500 outline-none transition-all" 
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1 text-slate-700">Tareas Bloque ({blockXp} XP c/u):</label>
+                  <span className="text-2xl font-black text-slate-400">X</span>
+                  <div className={`flex-1 p-4 rounded-xl border transition-all duration-300 bg-red-100 ${alcanzaRecompensa ? 'animate-fire-red border-red-300' : 'border-red-200'}`}>
+                    <label className="block text-sm font-medium mb-1 text-red-800">Tareas Bloque:</label>
                     <input 
                       type="number" 
                       min="0" 
                       value={completedBlocks} 
                       onChange={(e) => setCompletedBlocks(Math.max(0, parseInt(e.target.value) || 0))} 
-                      className="w-full border rounded-lg p-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all" 
+                      className="w-full border rounded-lg p-2.5 bg-white focus:ring-2 focus:ring-red-500 outline-none transition-all" 
                     />
                   </div>
                 </div>
                 <div className="bg-indigo-50 p-4 rounded-xl flex justify-between items-center border border-indigo-100">
                   <div>
                     <span className="text-sm font-medium text-indigo-900">Total XP a recibir:</span>
-                    <span className="block text-2xl font-black text-indigo-600">+{ (completedMinis * miniXp) + (completedBlocks * blockXp) } XP</span>
+                    <span className="block text-2xl font-black text-indigo-600">
+                      {isRegistering ? `+${registerXpDisplay}` : showXpResult ? `+${lastXpAddedRef.current}` : ''} 
+                    </span>
                   </div>
                   <button 
                     onClick={registerCompletedTasks} 
-                    disabled={((completedMinis * miniXp) + (completedBlocks * blockXp)) === 0}
+                    disabled={isRegistering || ((10 + (10 * completedMinis)) * (1 + completedBlocks)) === 0}
                     className={`px-5 py-2.5 rounded-lg font-semibold transition-all duration-200 ${
-                      ((completedMinis * miniXp) + (completedBlocks * blockXp)) > 0 
+                      !isRegistering && ((10 + (10 * completedMinis)) * (1 + completedBlocks)) > 0 
                         ? 'bg-indigo-600 text-white hover:bg-indigo-700 active:scale-95 shadow-md hover:shadow-lg' 
                         : 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
                     }`}
@@ -432,6 +565,66 @@ function App() {
                 </div>
               </div>
           </div>
+        ) : activeTab === 'inventario' ? (
+          <div className="space-y-6">
+            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+              <h3 className="text-xl font-bold mb-4">Recompensas reclamadas</h3>
+              {claimedRewards.length === 0 ? (
+                <p className="text-slate-500">Aún no has reclamado ninguna recompensa.</p>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {claimedRewards.sort((a, b) => b.claimedAt - a.claimedAt).map(r => (
+                    <div key={r.id + r.claimedAt} className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col items-center text-center gap-2">
+                      {r.imageUrl && <img src={r.imageUrl} alt={r.name} className="w-20 h-20 object-cover rounded-xl border-2 border-indigo-200" />}
+                      <span className="font-bold text-slate-900">{r.name}</span>
+                      <span className="text-xs text-slate-500">Reclamada - Nivel {r.requiredLevel}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+              <h3 className="text-xl font-bold mb-4">Recompensas obtenidas</h3>
+              {(() => {
+                const unlocked = rewards.filter(r => r.requiredLevel <= level && !claimedRewards.find(cr => cr.id === r.id));
+                if (unlocked.length === 0) return <p className="text-slate-500">No hay recompensas disponibles para reclamar.</p>;
+                return (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {unlocked.map(r => (
+                      <div key={r.id} className="bg-emerald-50 p-4 rounded-xl border border-emerald-200 flex flex-col items-center text-center gap-2">
+                        {r.imageUrl && <img src={r.imageUrl} alt={r.name} className="w-20 h-20 object-cover rounded-xl border-2 border-emerald-300" />}
+                        <span className="font-bold text-slate-900">{r.name}</span>
+                        <span className="text-xs text-slate-500">Nivel {r.requiredLevel}</span>
+                        <button onClick={() => claimReward(r)} className="mt-1 bg-indigo-600 text-white text-xs px-4 py-1.5 rounded-full font-bold hover:bg-indigo-700 transition-all active:scale-95">
+                          Reclamar
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+            </div>
+
+            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+              <h3 className="text-xl font-bold mb-4">Recompensas por conseguir</h3>
+              {(() => {
+                const upcoming = rewards.filter(r => r.requiredLevel > level && !claimedRewards.find(cr => cr.id === r.id));
+                if (upcoming.length === 0) return <p className="text-slate-500">No hay más recompensas por descubrir.</p>;
+                return (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {upcoming.map(r => (
+                      <div key={r.id} className="bg-amber-50 p-4 rounded-xl border border-amber-200 flex flex-col items-center text-center gap-2">
+                        {r.imageUrl && <img src={r.imageUrl} alt={r.name} className="w-20 h-20 object-cover rounded-xl border-2 border-amber-300" />}
+                        <span className="font-bold text-slate-900">{r.name}</span>
+                        <span className="text-xs text-slate-500">Nivel {r.requiredLevel}</span>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+            </div>
+          </div>
         ) : (
           /* Config Tab */
           <div className="space-y-6">
@@ -448,7 +641,7 @@ function App() {
                   </div>
                 </div>
                 <div className='flex gap-2'>
-                    <button onClick={() => { setTotalXp(0); setDisplayedXp(0); setPassOffset(0); setTasks([]); }} className="bg-red-600 text-white p-3 rounded-lg flex-grow font-bold">Reiniciar Nivel a 1</button>
+                    <button onClick={() => { setTotalXp(0); setDisplayedXp(0); setPassOffset(0); setTasks([]); setClaimedRewards([]); }} className="bg-red-600 text-white p-3 rounded-lg flex-grow font-bold">Reiniciar Nivel a 1</button>
                     <button onClick={generateDailyTasks} className="bg-emerald-600 text-white p-3 rounded-lg flex-grow font-bold">Añadir tareas hoy</button>
                 </div>
             </div>
@@ -466,7 +659,7 @@ function App() {
                     </div>
                   ))}
                 </div>
-                
+
                 <h4 className="font-bold text-lg mb-4">Tareas:</h4>
                 <div className="space-y-2">
                   {[...tasks, ...recurringTasks.map(t => ({...t, isRecurring: true}))].map(r => (

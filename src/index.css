@@ -18,3 +18,48 @@
 .animate-popup {
   animation: popup 0.5s ease-out forwards;
 }
+
+@keyframes reward-glow {
+  0%, 100% { box-shadow: 0 0 5px rgba(79, 70, 229, 0.3); transform: scale(1); }
+  50% { box-shadow: 0 0 25px rgba(79, 70, 229, 0.6); transform: scale(1.02); }
+}
+
+.animate-reward-glow {
+  animation: reward-glow 1.2s ease-in-out infinite;
+}
+
+@keyframes fire-blue {
+  0% { box-shadow: 0 0 5px rgba(14, 165, 233, 0.3), 0 0 10px rgba(14, 165, 233, 0.2); transform: translateY(0); }
+  25% { box-shadow: 0 -2px 12px rgba(14, 165, 233, 0.6), 0 0 20px rgba(14, 165, 233, 0.4); transform: translateY(-1px); }
+  50% { box-shadow: 0 0 20px rgba(6, 182, 212, 0.7), 0 -4px 30px rgba(6, 182, 212, 0.5); transform: translateY(-2px); }
+  75% { box-shadow: 0 -1px 15px rgba(14, 165, 233, 0.5), 0 0 25px rgba(14, 165, 233, 0.3); transform: translateY(-1px); }
+  100% { box-shadow: 0 0 5px rgba(14, 165, 233, 0.3), 0 0 10px rgba(14, 165, 233, 0.2); transform: translateY(0); }
+}
+
+.animate-fire-blue {
+  animation: fire-blue 0.8s ease-in-out infinite;
+}
+
+@keyframes fire-red {
+  0% { box-shadow: 0 0 5px rgba(239, 68, 68, 0.3), 0 0 10px rgba(239, 68, 68, 0.2); transform: translateY(0); }
+  25% { box-shadow: 0 -2px 12px rgba(239, 68, 68, 0.6), 0 0 20px rgba(239, 68, 68, 0.4); transform: translateY(-1px); }
+  50% { box-shadow: 0 0 20px rgba(249, 115, 22, 0.7), 0 -4px 30px rgba(249, 115, 22, 0.5); transform: translateY(-2px); }
+  75% { box-shadow: 0 -1px 15px rgba(239, 68, 68, 0.5), 0 0 25px rgba(239, 68, 68, 0.3); transform: translateY(-1px); }
+  100% { box-shadow: 0 0 5px rgba(239, 68, 68, 0.3), 0 0 10px rgba(239, 68, 68, 0.2); transform: translateY(0); }
+}
+
+.animate-fire-red {
+  animation: fire-red 0.8s ease-in-out infinite;
+}
+
+@keyframes toast-in-out {
+  0% { transform: scale(0.5) translateY(-20px); opacity: 0; }
+  8% { transform: scale(1.15) translateY(0); opacity: 1; }
+  15% { transform: scale(1) translateY(0); opacity: 1; }
+  75% { transform: scale(1) translateY(0); opacity: 1; }
+  100% { transform: scale(0.8) translateY(-10px); opacity: 0; }
+}
+
+.animate-toast {
+  animation: toast-in-out 3.5s ease-in-out forwards;
+}
