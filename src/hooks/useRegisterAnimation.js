@@ -19,6 +19,7 @@ export default function useRegisterAnimation(addXp, xpMode = 'current', miniXp =
   })
 
   const startRegister = useCallback((completedMinis, completedBlocks) => {
+    if (completedMinis === 0 && completedBlocks === 0) return null
     const left = xpMode === 'classic'
       ? completedMinis * miniXp
       : 1 + completedMinis * 5

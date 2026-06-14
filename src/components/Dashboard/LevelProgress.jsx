@@ -1,15 +1,24 @@
 export default function LevelProgress({
-  displayedXp, nextLevelXp, nextReward,
-  totalXp, isRegistering, showXpResult, xpARecibir,
+  displayedXp, nextLevelXp, totalXp, rewards = [],
+  isRegistering, showXpResult, xpARecibir,
 }) {
   const animLevel = Math.floor(displayedXp / 100) + 1
   const animCurrentLevelXp = displayedXp % 100
-  const realLevel = Math.floor(totalXp / 100) + 1
-  const realCurrentLevelXp = totalXp % 100
+  const nextReward = [...rewards]
+    .sort((a, b) => a.requiredLevel - b.requiredLevel)
+    .find(r => r.requiredLevel > animLevel)
   const xpFaltante = nextReward
-    ? (nextReward.requiredLevel - realLevel) * 100 - realCurrentLevelXp
+    ? (nextReward.requiredLevel - animLevel) * 100 - animCurrentLevelXp
     : 0
-  const alcanzaRecompensa = !isRegistering && !showXpResult && xpARecibir >= xpFaltante && xpFaltante > 0
+
+  const pendingXp = isRegistering ? xpARecibir : 0
+  const finalLevel = Math.floor((totalXp + pendingXp) / 100) + 1
+  const alcanzaRecompensa = nextReward
+    && nextReward.requiredLevel > animLevel
+    && (isRegistering || showXpResult
+      ? finalLevel >= nextReward.requiredLevel
+      : xpARecibir >= xpFaltante && xpFaltante > 0
+    )
 
   return (
     <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">

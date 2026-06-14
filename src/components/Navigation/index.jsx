@@ -1,6 +1,7 @@
-export default function Navigation({ activeTab, onTabChange, level, rewards, claimedRewards }) {
+export default function Navigation({ activeTab, onTabChange, level, rewards, claimedRewards, newPassLevels }) {
   const tabs = [
     { key: 'dashboard', label: 'Dashboard' },
+    { key: 'pase', label: 'Pase', badge: newPassLevels > 0 ? newPassLevels : null },
     { key: 'admin', label: 'Administrar' },
     { key: 'config', label: 'Configuración' },
     {

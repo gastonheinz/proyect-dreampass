@@ -138,7 +138,7 @@ export default function TaskRegistration({
               min="0"
               value={completedMinis}
               onChange={e => setCompletedMinis(Math.max(0, parseInt(e.target.value) || 0))}
-              disabled={regAnim.isRegistering}
+              disabled={regAnim.isRegistering || regAnim.showXpResult}
               className="w-full border rounded-lg p-2.5 bg-white focus:ring-2 focus:ring-sky-500 outline-none transition-all disabled:opacity-50"
             />
           </div>
@@ -157,7 +157,7 @@ export default function TaskRegistration({
               min="0"
               value={completedBlocks}
               onChange={e => setCompletedBlocks(Math.max(0, parseInt(e.target.value) || 0))}
-              disabled={regAnim.isRegistering}
+              disabled={regAnim.isRegistering || regAnim.showXpResult}
               className="w-full border rounded-lg p-2.5 bg-white focus:ring-2 focus:ring-red-500 outline-none transition-all disabled:opacity-50"
             />
           </div>
@@ -173,9 +173,9 @@ export default function TaskRegistration({
             <div className="flex justify-center">
               <button
                 onClick={() => regAnim.startRegister(completedMinis, completedBlocks)}
-                disabled={regAnim.isRegistering || xpARecibir === 0}
+                disabled={regAnim.isRegistering || (completedMinis === 0 && completedBlocks === 0)}
                 className={`px-6 py-3 rounded-lg font-semibold transition-all duration-200 ${
-                  !regAnim.isRegistering && xpARecibir > 0
+                   !regAnim.isRegistering && (completedMinis > 0 || completedBlocks > 0)
                     ? 'bg-indigo-600 text-white hover:bg-indigo-700 active:scale-95 shadow-md hover:shadow-lg'
                     : 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
                 }`}
