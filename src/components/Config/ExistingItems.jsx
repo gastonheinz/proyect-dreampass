@@ -4,7 +4,7 @@ export default function ExistingItems({
   rewards, onDeleteReward,
   tasks, recurringTasks,
   onDeleteTask, onDeleteRecurringTask,
-  onUpdateDays, onMakeRecurring,
+  onUpdateDays, onMakeRecurring, onMakeNonRecurring,
 }) {
   return (
     <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
@@ -41,9 +41,13 @@ export default function ExistingItems({
               )}
             </div>
             <div className="flex gap-2">
-              {!r.isRecurring && (
+              {!r.isRecurring ? (
                 <button onClick={() => onMakeRecurring(r)} className="text-blue-600 hover:text-blue-800 text-sm font-semibold">
                   Hacer Recurrente
+                </button>
+              ) : (
+                <button onClick={() => onMakeNonRecurring(r)} className="text-amber-600 hover:text-amber-800 text-sm font-semibold">
+                  Quitar Recurrente
                 </button>
               )}
               <button

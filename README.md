@@ -1,17 +1,84 @@
-# React + Vite
+# 🎮 Battle Pass Pro
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Aplicación gamificada de gestión de tareas con sistema de Pase de Batalla. Completa tareas, gana XP, sube de nivel y desbloquea recompensas.
 
-Currently, two official plugins are available:
+## ✨ Características
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Sistema de niveles** — Gana XP completando tareas y sube de nivel (cada 100 XP = 1 nivel)
+- **Dos modos de XP** — Clásico (suma lineal) o Actual (multiplicador combinado)
+- **Pase de batalla** — Visualiza niveles desbloqueables con sus recompensas en un grid paginado
+- **Tareas recurrentes** — Asigna tareas a días de la semana y se generan automáticamente
+- **Inventario** — Reclama y revisa recompensas desbloqueadas y obtenidas
+- **Panel de administración** — Crea tareas personalizadas y recompensas con imagen
+- **Animaciones** — Efectos visuales al subir de nivel (popup con confeti y toast)
+- **Persistencia local** — Todo el progreso se guarda automáticamente en `localStorage`
 
-## React Compiler
+## 🛠️ Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+| Tecnología | Versión |
+|------------|---------|
+| [React](https://react.dev) | 19.2 |
+| [Vite](https://vitejs.dev) | 8.0 |
+| [Tailwind CSS](https://tailwindcss.com) | 4.3 |
+| [PostCSS](https://postcss.org) | 8.5 |
+| [ESLint](https://eslint.org) | 10.3 |
 
-## Expanding the ESLint configuration
+## 🚀 Desarrollo
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
-    
+```bash
+# Instalar dependencias
+npm install
+
+# Iniciar servidor de desarrollo (HMR)
+npm run dev
+
+# Compilar para producción
+npm run build
+
+# Previsualizar build de producción
+npm run preview
+
+# Ejecutar linter
+npm run lint
+```
+
+## 📁 Estructura del proyecto
+
+```
+src/
+├── assets/              # Recursos estáticos (imágenes, SVG)
+├── components/
+│   ├── Admin/           # Panel de administración (tareas, recompensas)
+│   ├── BattlePass/      # Vista del pase de batalla
+│   ├── Config/          # Configuración de XP y gestión de datos
+│   ├── Dashboard/       # Panel principal (progreso, tareas, grid)
+│   ├── Header/          # Encabezado de la aplicación
+│   ├── Inventory/       # Inventario de recompensas
+│   ├── LevelUpPopup/    # Modal de subida de nivel con confeti
+│   ├── LevelUpToast/    # Notificación toast de subida de nivel
+│   └── Navigation/      # Navegación por pestañas
+├── hooks/               # Custom hooks de React
+│   ├── useGameState.js      # Estado global del juego
+│   ├── useLevelUp.js        # Detección de subida de nivel
+│   ├── useRegisterAnimation.js  # Animación de registro de XP
+│   └── useXpAnimation.js    # Animación de contador de XP
+├── App.jsx              # Componente raíz
+├── index.css            # Estilos globales + Tailwind
+└── main.jsx             # Punto de entrada
+```
+
+## 🐳 Docker
+
+El proyecto incluye configuración Docker para el entorno de desarrollo con la CLI `opencode-ai`:
+
+```bash
+# Construir imagen
+docker compose build
+
+# Ejecutar contenedor interactivo
+docker compose run opencode
+```
+
+## 📄 Licencia
+
+Uso interno — proyecto privado.

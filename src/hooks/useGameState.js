@@ -120,6 +120,11 @@ export default function useGameState() {
     setTasks(prev => prev.filter(t => t.id !== task.id))
   }, [])
 
+  const makeTaskNonRecurring = useCallback((task) => {
+    setTasks(prev => [...prev, { id: Date.now() + Math.random(), name: task.name, xp: task.xp, status: 'pending', type: task.type }])
+    setRecurringTasks(prev => prev.filter(t => t.id !== task.id))
+  }, [])
+
   const addReward = useCallback(async (name, requiredLevel, fileInput) => {
     if (!name || !requiredLevel) return
     let imageUrl = ''
@@ -168,7 +173,7 @@ export default function useGameState() {
     nextReward,
     addTask, completeTask,
     deleteTask, deleteRecurringTask,
-    updateRecurringTaskDays, makeTaskRecurring,
+    updateRecurringTaskDays, makeTaskRecurring, makeTaskNonRecurring,
     addReward, deleteReward, claimReward,
     addXp, resetLevel, generateDailyTasks,
   }

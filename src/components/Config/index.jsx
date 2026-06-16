@@ -23,6 +23,7 @@ export default function Config({ game }) {
         onDeleteRecurringTask={game.deleteRecurringTask}
         onUpdateDays={game.updateRecurringTaskDays}
         onMakeRecurring={game.makeTaskRecurring}
+        onMakeNonRecurring={game.makeTaskNonRecurring}
       />
     </div>
   )
