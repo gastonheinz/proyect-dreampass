@@ -22,7 +22,7 @@ export default function App() {
   const game = useGameState()
   const displayedXp = useXpAnimation(game.totalXp)
   const levelUp = useLevelUp(displayedXp, game.rewards)
-  const regAnim = useRegisterAnimation(game.addXp, game.xpMode, game.miniXp, game.blockXp)
+  const regAnim = useRegisterAnimation(game.addXp, game.xpMode, game.miniXp, game.mediaXp, game.blockXp)
 
   useEffect(() => {
     if (levelUp.showLevelUp || levelUp.levelUpToast) {

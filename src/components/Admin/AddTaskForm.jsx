@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import DaySelector from './DaySelector'
 
-export default function AddTaskForm({ onAdd }) {
+export default function AddTaskForm({ onAdd, miniXp, mediaXp, blockXp }) {
   const [taskName, setTaskName] = useState('')
   const [taskType, setTaskType] = useState('Mini')
   const [taskCustomXp, setTaskCustomXp] = useState('')
@@ -29,11 +29,12 @@ export default function AddTaskForm({ onAdd }) {
           className="border rounded-lg p-2.5"
         />
         <div className="flex gap-2 items-center">
-          <select value={taskType} onChange={e => setTaskType(e.target.value)} className="border rounded-lg p-2.5 flex-grow">
-            <option>Mini</option>
-            <option>Bloque</option>
-            <option>Personalizada</option>
-          </select>
+            <select value={taskType} onChange={e => setTaskType(e.target.value)} className="border rounded-lg p-2.5 flex-grow">
+              <option value="Mini">Mini ({miniXp} XP)</option>
+              <option value="Media">Media ({mediaXp} XP)</option>
+              <option value="Bloque">Bloque ({blockXp} XP)</option>
+              <option value="Personalizada">Personalizada</option>
+            </select>
           {taskType === 'Personalizada' && (
             <input
               type="number"

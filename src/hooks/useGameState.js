@@ -28,6 +28,7 @@ export default function useGameState() {
   const [totalXp, setTotalXp] = useState(() => loadInt('totalXp', 0))
   const [miniXp, setMiniXp] = useState(() => loadInt('miniXp', 10))
   const [blockXp, setBlockXp] = useState(() => loadInt('blockXp', 100))
+  const [mediaXp, setMediaXp] = useState(() => loadInt('mediaXp', 50))
   const [xpMode, setXpMode] = useState(() => loadJSON('xpMode', 'current'))
 
   const recurringTasksRef = useRef(recurringTasks)
@@ -42,6 +43,7 @@ export default function useGameState() {
   useEffect(() => { localStorage.setItem('totalXp', totalXp.toString()) }, [totalXp])
   useEffect(() => { localStorage.setItem('miniXp', miniXp.toString()) }, [miniXp])
   useEffect(() => { localStorage.setItem('blockXp', blockXp.toString()) }, [blockXp])
+  useEffect(() => { localStorage.setItem('mediaXp', mediaXp.toString()) }, [mediaXp])
   useEffect(() => { localStorage.setItem('xpMode', JSON.stringify(xpMode)) }, [xpMode])
 
   const level = Math.floor(totalXp / 100) + 1
@@ -77,6 +79,7 @@ export default function useGameState() {
     if (!name) return
     let xp = 0
     if (type === 'Mini') xp = miniXp
+    else if (type === 'Media') xp = mediaXp
     else if (type === 'Bloque') xp = blockXp
     else xp = parseInt(customXp) || 0
     const newTask = { id: Date.now(), name, xp, status: 'pending', type }
@@ -85,18 +88,15 @@ export default function useGameState() {
     } else {
       setTasks(prev => [...prev, newTask])
     }
-  }, [miniXp, blockXp])
+  }, [miniXp, mediaXp, blockXp])
 
   const completeTask = useCallback((taskId) => {
-    setTasks(prev => {
-      const task = prev.find(t => t.id === taskId)
-      if (task) {
-        setTotalXp(xp => xp + task.xp)
-        return prev.filter(t => t.id !== taskId)
-      }
-      return prev
-    })
-  }, [])
+    const task = tasks.find(t => t.id === taskId)
+    if (task) {
+      setTotalXp(xp => xp + task.xp)
+      setTasks(prev => prev.filter(t => t.id !== taskId))
+    }
+  }, [tasks])
 
   const deleteTask = useCallback((taskId) => {
     setTasks(prev => prev.filter(t => t.id !== taskId))
@@ -168,6 +168,7 @@ export default function useGameState() {
     totalXp, setTotalXp,
     miniXp, setMiniXp,
     blockXp, setBlockXp,
+    mediaXp, setMediaXp,
     xpMode, setXpMode,
     level, currentLevelXp, nextLevelXp,
     nextReward,

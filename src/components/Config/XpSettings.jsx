@@ -1,4 +1,4 @@
-export default function XpSettings({ miniXp, setMiniXp, blockXp, setBlockXp, xpMode, setXpMode, onReset, onGenerateTasks }) {
+export default function XpSettings({ miniXp, setMiniXp, blockXp, setBlockXp, mediaXp, setMediaXp, xpMode, setXpMode, onReset, onGenerateTasks }) {
   return (
     <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
       <h3 className="text-lg font-bold mb-4">Configuración XP</h3>
@@ -29,8 +29,8 @@ export default function XpSettings({ miniXp, setMiniXp, blockXp, setBlockXp, xpM
         </div>
         <p className="text-xs text-slate-500 mt-2">
           {xpMode === 'current'
-            ? 'Actual: (1 + Mini×5) × (1 + Bloque×5)'
-            : 'Clásico: (Mini×XP Mini) + (Bloque×XP Bloque)'
+            ? 'Actual: (1 + Mini×5) × (1 + Media×5) × (1 + Bloque×5)'
+            : 'Clásico: (Mini×XP Mini) + (Media×XP Media) + (Bloque×XP Bloque)'
           }
         </p>
       </div>
@@ -42,6 +42,15 @@ export default function XpSettings({ miniXp, setMiniXp, blockXp, setBlockXp, xpM
             type="number"
             value={miniXp}
             onChange={e => setMiniXp(parseInt(e.target.value) || 0)}
+            className="w-full border rounded-lg p-2.5"
+          />
+        </div>
+        <div className="flex-1">
+          <label className="block text-sm font-medium">XP Media:</label>
+          <input
+            type="number"
+            value={mediaXp}
+            onChange={e => setMediaXp(parseInt(e.target.value) || 0)}
             className="w-full border rounded-lg p-2.5"
           />
         </div>

@@ -9,6 +9,8 @@ export default function Config({ game }) {
         setMiniXp={game.setMiniXp}
         blockXp={game.blockXp}
         setBlockXp={game.setBlockXp}
+        mediaXp={game.mediaXp}
+        setMediaXp={game.setMediaXp}
         xpMode={game.xpMode}
         setXpMode={game.setXpMode}
         onReset={game.resetLevel}
