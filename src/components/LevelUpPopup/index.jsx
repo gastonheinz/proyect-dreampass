@@ -22,17 +22,17 @@ export default function LevelUpPopup({ show, onClose }) {
         >
           ✕
         </button>
-        <h2 className="text-5xl font-black text-indigo-600 mb-2">¡Nivel {show.level}!</h2>
+        <h2 className="text-5xl font-black text-violet-600 mb-2">¡Nivel {show.level}!</h2>
         <p className="text-xl text-slate-600 mb-6">¡Has subido de nivel!</p>
 
         {show.rewards.length > 0 && (
-          <div className="bg-indigo-50 p-4 rounded-xl">
-            <h3 className="font-bold text-indigo-900 mb-3">¡Nuevas recompensas disponibles!</h3>
-            <p className="text-sm text-indigo-600 mb-3">Reclámalas desde tu inventario.</p>
+          <div className="bg-violet-50 p-4 rounded-xl">
+            <h3 className="font-bold text-violet-900 mb-3">¡Nuevas recompensas disponibles!</h3>
+            <p className="text-sm text-violet-600 mb-3">Reclámalas desde tu inventario.</p>
             <div className="flex flex-wrap justify-center gap-3">
               {show.rewards.map(r => (
                 <div key={r.id} className="flex flex-col items-center gap-1">
-                  {r.imageUrl && <img src={r.imageUrl} alt={r.name} className="w-16 h-16 object-cover rounded-full border-2 border-indigo-200" />}
+                  {r.imageUrl && <img src={r.imageUrl} alt={r.name} className="w-16 h-16 object-cover rounded-full border-2 border-violet-200" />}
                   <span className="text-sm font-semibold">{r.name}</span>
                 </div>
               ))}

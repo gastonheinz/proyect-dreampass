@@ -38,7 +38,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans p-4 md:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-purple-50 text-slate-900 font-sans p-4 md:p-8">
       <LevelUpPopup show={levelUp.showLevelUp} onClose={() => levelUp.setShowLevelUp(null)} />
       <LevelUpToast level={levelUp.levelUpToast} />
 

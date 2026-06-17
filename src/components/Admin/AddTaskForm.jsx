@@ -44,7 +44,7 @@ export default function AddTaskForm({ onAdd, miniXp, mediaXp, blockXp }) {
               className="w-24 border rounded-lg p-2.5"
             />
           )}
-          <button onClick={handleAdd} className="bg-indigo-600 text-white px-5 py-2.5 rounded-lg font-semibold">
+          <button onClick={handleAdd} className="bg-violet-600 text-white px-5 py-2.5 rounded-lg font-semibold">
             Añadir
           </button>
         </div>

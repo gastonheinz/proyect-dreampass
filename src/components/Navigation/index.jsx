@@ -21,8 +21,8 @@ export default function Navigation({ activeTab, onTabChange, level, rewards, cla
           key={tab.key}
           className={`px-6 py-2.5 rounded-lg font-semibold transition-all duration-200 relative ${
             activeTab === tab.key
-              ? 'bg-indigo-600 text-white shadow-md'
-              : 'text-slate-600 hover:text-indigo-600'
+              ? 'bg-violet-600 text-white shadow-md'
+              : 'text-slate-600 hover:text-violet-600'
           }`}
           onClick={() => onTabChange(tab.key)}
         >

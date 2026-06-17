@@ -24,7 +24,7 @@ export default function AddRewardForm({ onAdd }) {
           <input id="rewardLevel" type="number" placeholder="Nivel" className="w-24 border rounded-lg p-2.5" />
           <input id="rewardImageFile" type="file" accept="image/*" className="flex-grow border rounded-lg p-2.5" />
         </div>
-        <button onClick={handleAdd} className="bg-indigo-600 text-white px-5 py-2.5 rounded-lg font-semibold">
+        <button onClick={handleAdd} className="bg-violet-600 text-white px-5 py-2.5 rounded-lg font-semibold">
           Añadir Recompensa
         </button>
       </div>

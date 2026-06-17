@@ -9,11 +9,11 @@ export default function TaskList({ tasks, onComplete }) {
               <h4 className="font-semibold">
                 {task.name} <span className="text-xs text-slate-400">({task.type})</span>
               </h4>
-              <p className="text-sm text-indigo-600 font-medium">{task.xp} XP</p>
+              <p className="text-sm text-violet-600 font-medium">{task.xp} XP</p>
             </div>
             <button
               onClick={() => onComplete(task.id)}
-              className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-700 transition-all active:scale-95"
+              className="bg-violet-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-violet-700 transition-all active:scale-95"
             >
               Completar
             </button>

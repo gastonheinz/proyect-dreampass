@@ -40,8 +40,8 @@ export default function BattlePassGrid({ level, rewards, claimedRewards }) {
                 onMouseLeave={() => setHoveredLevel(null)}
                 className={`relative p-3 border-2 rounded-lg flex flex-col items-center justify-between min-h-[120px] transition-transform hover:scale-105 cursor-pointer ${
                   level >= lv
-                    ? 'bg-indigo-600 border-indigo-700 text-white'
-                    : 'bg-slate-50 border-slate-200 hover:border-indigo-300'
+                    ? 'bg-violet-600 border-violet-700 text-white'
+                    : 'bg-slate-50 border-slate-200 hover:border-violet-300'
                 }`}
               >
                 {level >= lv && levelRewards.length > 0 && (
@@ -51,7 +51,7 @@ export default function BattlePassGrid({ level, rewards, claimedRewards }) {
                     </svg>
                   </div>
                 )}
-                <span className={`text-xs font-bold mb-2 ${level >= lv ? 'text-indigo-100' : 'text-slate-500'}`}>
+                <span className={`text-xs font-bold mb-2 ${level >= lv ? 'text-violet-100' : 'text-slate-500'}`}>
                   Lv.{lv}
                 </span>
                 <div className="flex-grow flex flex-col justify-center gap-1 w-full">
@@ -61,7 +61,7 @@ export default function BattlePassGrid({ level, rewards, claimedRewards }) {
                       <div
                         key={r.id}
                         className={`flex flex-col items-center text-center p-1 rounded transition-all ${
-                          level >= lv ? 'bg-indigo-700 text-white' : 'bg-slate-200 text-slate-600'
+                          level >= lv ? 'bg-violet-700 text-white' : 'bg-slate-200 text-slate-600'
                         }`}
                       >
                         {r.imageUrl && <img src={r.imageUrl} alt={r.name} className="w-8 h-8 object-cover rounded mb-1" />}
@@ -71,7 +71,7 @@ export default function BattlePassGrid({ level, rewards, claimedRewards }) {
                     )
                   })}
                 </div>
-                {level === lv && <div className="absolute -bottom-2 w-4 h-4 bg-indigo-600 rotate-45 rounded-sm" />}
+                {level === lv && <div className="absolute -bottom-2 w-4 h-4 bg-violet-600 rotate-45 rounded-sm" />}
               </div>
             )
           })}
@@ -84,9 +84,9 @@ export default function BattlePassGrid({ level, rewards, claimedRewards }) {
         return (
           <div className="absolute left-full top-0 ml-3 w-56 bg-white rounded-xl border border-slate-200 shadow-xl p-5 flex flex-col items-center text-center gap-3 z-50">
             {r.imageUrl ? (
-              <img src={r.imageUrl} alt={r.name} className="w-32 h-32 object-cover rounded-xl border-2 border-indigo-200" />
+              <img src={r.imageUrl} alt={r.name} className="w-32 h-32 object-cover rounded-xl border-2 border-violet-200" />
             ) : (
-              <div className="w-32 h-32 bg-slate-100 rounded-xl border-2 border-indigo-200 flex items-center justify-center text-slate-400 text-4xl">?</div>
+              <div className="w-32 h-32 bg-slate-100 rounded-xl border-2 border-violet-200 flex items-center justify-center text-slate-400 text-4xl">?</div>
             )}
             <span className="font-bold text-slate-900 text-lg">{r.name}</span>
             <span className="text-sm text-slate-500">Nivel {r.requiredLevel}</span>

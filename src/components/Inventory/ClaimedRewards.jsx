@@ -10,7 +10,7 @@ export default function ClaimedRewards({ claimedRewards }) {
             .sort((a, b) => b.claimedAt - a.claimedAt)
             .map(r => (
               <div key={r.id + r.claimedAt} className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col items-center text-center gap-2">
-                {r.imageUrl && <img src={r.imageUrl} alt={r.name} className="w-20 h-20 object-cover rounded-xl border-2 border-indigo-200" />}
+                {r.imageUrl && <img src={r.imageUrl} alt={r.name} className="w-20 h-20 object-cover rounded-xl border-2 border-violet-200" />}
                 <span className="font-bold text-slate-900">{r.name}</span>
                 <span className="text-xs text-slate-500">Reclamada - Nivel {r.requiredLevel}</span>
               </div>

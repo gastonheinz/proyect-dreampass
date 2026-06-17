@@ -41,7 +41,7 @@ export default function TaskRegistration({
     if (xpMode === 'classic') {
       return (
         <div className="text-center">
-          <div className="flex justify-center items-center gap-2 text-lg font-black text-indigo-600 flex-wrap">
+          <div className="flex justify-center items-center gap-2 text-lg font-black text-violet-600 flex-wrap">
             <span className={`transition-all duration-300 ${regAnim.animPhase === 'left' || leftComplete ? 'opacity-100' : 'opacity-40'}`}>
               ({completedMinis} × {miniXp})
             </span>
@@ -69,7 +69,7 @@ export default function TaskRegistration({
             {(regAnim.animPhase === 'total' || regAnim.showXpResult) && (
               <>
                 <span className="text-slate-400">=</span>
-                <span className={`transition-all duration-300 ${regAnim.showXpResult ? 'text-emerald-600 scale-110' : 'text-indigo-700'}`}>
+                <span className={`transition-all duration-300 ${regAnim.showXpResult ? 'text-emerald-600 scale-110' : 'text-violet-700'}`}>
                   +{regAnim.showXpResult ? regAnim.lastXpAddedRef.current : regAnim.registerXpDisplay}
                 </span>
               </>
@@ -81,7 +81,7 @@ export default function TaskRegistration({
 
     return (
       <div className="text-center">
-        <div className="flex justify-center items-center gap-2 text-lg font-black text-indigo-600 flex-wrap">
+        <div className="flex justify-center items-center gap-2 text-lg font-black text-violet-600 flex-wrap">
           <span className={`transition-all duration-300 ${regAnim.animPhase === 'left' || leftComplete ? 'opacity-100' : 'opacity-40'}`}>
             (1 + {completedMinis}×5)
           </span>
@@ -109,7 +109,7 @@ export default function TaskRegistration({
           {(regAnim.animPhase === 'total' || regAnim.showXpResult) && (
             <>
               <span className="text-slate-400">=</span>
-              <span className={`transition-all duration-300 ${regAnim.showXpResult ? 'text-emerald-600 scale-110' : 'text-indigo-700'}`}>
+              <span className={`transition-all duration-300 ${regAnim.showXpResult ? 'text-emerald-600 scale-110' : 'text-violet-700'}`}>
                 +{regAnim.showXpResult ? regAnim.lastXpAddedRef.current : regAnim.registerXpDisplay}
               </span>
             </>
@@ -124,16 +124,16 @@ export default function TaskRegistration({
       return <div className="text-xs text-emerald-600 font-medium mt-1">¡XP añadida!</div>
     }
     if (regAnim.animPhase === 'left') {
-      return <div className="text-xs text-indigo-400 mt-1">Calculando factor izquierdo...</div>
+      return <div className="text-xs text-violet-400 mt-1">Calculando factor izquierdo...</div>
     }
     if (regAnim.animPhase === 'middle') {
-      return <div className="text-xs text-indigo-400 mt-1">Calculando factor medio...</div>
+      return <div className="text-xs text-violet-400 mt-1">Calculando factor medio...</div>
     }
     if (regAnim.animPhase === 'right') {
-      return <div className="text-xs text-indigo-400 mt-1">Calculando factor derecho...</div>
+      return <div className="text-xs text-violet-400 mt-1">Calculando factor derecho...</div>
     }
     if (regAnim.animPhase === 'total') {
-      return <div className="text-xs text-indigo-400 mt-1">Calculando XP total...</div>
+      return <div className="text-xs text-violet-400 mt-1">Calculando XP total...</div>
     }
     return null
   }
@@ -199,7 +199,7 @@ export default function TaskRegistration({
           </div>
         </div>
 
-        <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
+        <div className="bg-violet-50 p-4 rounded-xl border border-violet-100">
           {regAnim.isRegistering || regAnim.showXpResult ? (
             <div className="flex flex-col items-center gap-1">
               {renderFormula()}
@@ -212,7 +212,7 @@ export default function TaskRegistration({
                 disabled={regAnim.isRegistering || (completedMinis === 0 && completedMedias === 0 && completedBlocks === 0)}
                 className={`px-6 py-3 rounded-lg font-semibold transition-all duration-200 ${
                    !regAnim.isRegistering && (completedMinis > 0 || completedMedias > 0 || completedBlocks > 0)
-                    ? 'bg-indigo-600 text-white hover:bg-indigo-700 active:scale-95 shadow-md hover:shadow-lg'
+                    ? 'bg-violet-600 text-white hover:bg-violet-700 active:scale-95 shadow-md hover:shadow-lg'
                     : 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
                 }`}
               >

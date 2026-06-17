@@ -15,7 +15,7 @@ export default function UnlockedRewards({ rewards, level, claimedRewards, onClai
               <span className="text-xs text-slate-500">Nivel {r.requiredLevel}</span>
               <button
                 onClick={() => onClaim(r)}
-                className="mt-1 bg-indigo-600 text-white text-xs px-4 py-1.5 rounded-full font-bold hover:bg-indigo-700 transition-all active:scale-95"
+                className="mt-1 bg-violet-600 text-white text-xs px-4 py-1.5 rounded-full font-bold hover:bg-violet-700 transition-all active:scale-95"
               >
                 Reclamar
               </button>

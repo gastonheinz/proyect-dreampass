@@ -10,8 +10,8 @@ export default function XpSettings({ miniXp, setMiniXp, blockXp, setBlockXp, med
             onClick={() => setXpMode('current')}
             className={`flex-1 p-3 rounded-lg font-semibold border transition-all ${
               xpMode === 'current'
-                ? 'bg-indigo-600 text-white border-indigo-600'
-                : 'bg-white text-slate-700 border-slate-300 hover:border-indigo-400'
+                ? 'bg-violet-600 text-white border-violet-600'
+                : 'bg-white text-slate-700 border-slate-300 hover:border-violet-400'
             }`}
           >
             Actual
@@ -20,8 +20,8 @@ export default function XpSettings({ miniXp, setMiniXp, blockXp, setBlockXp, med
             onClick={() => setXpMode('classic')}
             className={`flex-1 p-3 rounded-lg font-semibold border transition-all ${
               xpMode === 'classic'
-                ? 'bg-indigo-600 text-white border-indigo-600'
-                : 'bg-white text-slate-700 border-slate-300 hover:border-indigo-400'
+                ? 'bg-violet-600 text-white border-violet-600'
+                : 'bg-white text-slate-700 border-slate-300 hover:border-violet-400'
             }`}
           >
             Clásico
