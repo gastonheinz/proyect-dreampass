@@ -3,7 +3,8 @@ logs
 *.log
 
 
-
+.env    
+.env.*
 .dockerignore
 docker-compose.yml
 Dockerfile

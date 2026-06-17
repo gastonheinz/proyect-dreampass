@@ -67,18 +67,3 @@ src/
 └── main.jsx             # Punto de entrada
 ```
 
-## 🐳 Docker
-
-El proyecto incluye configuración Docker para el entorno de desarrollo con la CLI `opencode-ai`:
-
-```bash
-# Construir imagen
-docker compose build
-
-# Ejecutar contenedor interactivo
-docker compose run opencode
-```
-
-## 📄 Licencia
-
-Uso interno — proyecto privado.
